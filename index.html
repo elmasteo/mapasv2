@@ -243,8 +243,11 @@ async function uploadFileDirect(file,type){
 
 // --- Guardar lugar ---
 mSave.addEventListener('click', async ()=>{
-  const title = mTitle.textContent.trim() || 'Nuevo lugar';
+  const title = mTitle.textContent.trim() || 'Inserta nombre';
   currentPlace.title = title;
+  const desc = mDesc.value;
+  const tags = mTagsInput.value.split(',').map(t=>t.trim()).filter(Boolean);
+  const media = { images:[], audio:null, video:null };
 
   for(const f of mImages.files) media.images.push(await uploadFileDirect(f,'image'));
   if(mAudio.files[0]) media.audio = await uploadFileDirect(mAudio.files[0],'audio');
