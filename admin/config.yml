@@ -20,6 +20,6 @@ collections:
               { label: "Longitud", name: "lng", widget: "number", step: 0.000001 },
               { label: "Tags", name: "tags", widget: "list", default: [] },
               { label: "Imágenes", name: "images", widget: "list", field: { label: "Imagen", name: "image", widget: "image" } },
-              { label: "Videos", name: "videos", widget: "list", field: { label: "Video (embed URL)", name: "video", widget: "string" } },
+              { label: "Videos", name: "videos", widget: "list", field: { label: "Video (embed URL)", name: "video", widget: "file" } },
               { label: "Audios", name: "audios", widget: "list", field: { label: "Audio (archivo o URL)", name: "audio", widget: "file" } }
             ]}
