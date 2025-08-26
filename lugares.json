@@ -38,5 +38,25 @@
       "80",
       "nuevo"
     ]
+  },
+  {
+    "id": 1756252664304,
+    "coords": [
+      4.7024315870867515,
+      -74.11006271839143
+    ],
+    "title": "Casita",
+    "media": {
+      "images": [],
+      "audios": [],
+      "videos": []
+    },
+    "description": "Casita nuestra casita, hogar dulce hogar",
+    "tags": [
+      "casa",
+      "hogar",
+      "nuestra",
+      "casita"
+    ]
   }
 ]
