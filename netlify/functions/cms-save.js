@@ -6,7 +6,10 @@ exports.handler = async (event) => {
   try {
     const data = JSON.parse(event.body);
 
-    const res = await fetch(`${process.env.NETLIFY_API_URL}/collections/places/entries`, {
+    // URL correcta usando Site ID y Collection name
+    const url = `https://api.netlify.com/api/v1/sites/${process.env.NETLIFY_SITE_ID}/cms/collections/places/entries`;
+
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -15,7 +18,12 @@ exports.handler = async (event) => {
       body: JSON.stringify({ entry: data })
     });
 
-    const json = await res.json();
+    // Si no es JSON, fallará aquí
+    let json;
+    try { json = await res.json(); } catch(e){ 
+      throw new Error(`CMS save failed: ${await res.text()}`);
+    }
+
     if (!res.ok) throw new Error(json.msg || 'CMS save failed');
 
     return { statusCode: 200, body: JSON.stringify({ success: true, entry: json }) };
