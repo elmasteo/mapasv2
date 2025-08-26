@@ -211,16 +211,12 @@ async function loadPlaces() {
 // Inicializar mapa
 async function initMap() {
   const cmsPlaces = await loadPlaces();
-  cmsPlaces.forEach(addPlace);
-  if(cmsPlaces.length) map.fitBounds(cluster.getBounds(), { padding:[20,20] });
+  cmsPlaces.forEach(addPlace); // agrega directamente
+  if (cmsPlaces.length) map.fitBounds(cluster.getBounds(), { padding: [20,20] });
   updateCount();
 }
 
-// Vaciar la lista de lugares estática y usar CMS
-places.length = 0;
 initMap();
-
-
 
     // --- Mapa ---
     const map = L.map('map', { zoomControl: false, worldCopyJump: true }).setView([4.7110, -74.0721], 12);
