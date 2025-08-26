@@ -18,5 +18,26 @@
       "80",
       "nuevo"
     ]
+  },
+  {
+    "id": 1756251666672,
+    "coords": [
+      4.7107542962106335,
+      -74.10967111587526
+    ],
+    "title": "Hospital Engativá",
+    "media": {
+      "images": [],
+      "audios": [],
+      "videos": []
+    },
+    "description": "Prueba nuevo lugar hospital",
+    "tags": [
+      "hospital",
+      "cerca",
+      "portal",
+      "nuevo",
+      "prueba"
+    ]
   }
 ]
