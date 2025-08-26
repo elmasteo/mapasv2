@@ -1,32 +1,26 @@
 const fetch = require('node-fetch');
 
 exports.handler = async (event) => {
-  if(event.httpMethod !== 'POST') return { statusCode:405, body:'Method not allowed' };
+  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' };
 
-  try{
-    const place = JSON.parse(event.body);
+  try {
+    const data = JSON.parse(event.body);
 
-    // ID opcional: si ya existe, actualiza; si no, crea nuevo
-    const slug = place.id ? `place-${place.id}` : `place-${Date.now()}`;
-
-    const response = await fetch(`${process.env.NETLIFY_API_URL}/collections/lugares/entries/${slug}`, {
-      method: 'PUT',
+    const res = await fetch(`${process.env.NETLIFY_API_URL}/collections/places/entries`, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.NETLIFY_API_TOKEN}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.NETLIFY_API_TOKEN}`
       },
-      body: JSON.stringify({
-        entry: {
-          ...place,
-          id: slug
-        }
-      })
+      body: JSON.stringify({ entry: data })
     });
 
-    const json = await response.json();
-    return { statusCode:200, body: JSON.stringify(json) };
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.msg || 'CMS save failed');
 
-  } catch(e){
-    return { statusCode:500, body: e.message };
+    return { statusCode: 200, body: JSON.stringify({ success: true, entry: json }) };
+  } catch (e) {
+    console.error(e);
+    return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
   }
 };
