@@ -39,7 +39,7 @@ body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;back
 .content{display:grid;gap:1rem;padding:1rem}
 @media(min-width:900px){.content{grid-template-columns:1.4fr 1fr}}
 .gallery{position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
-.gallery img, .gallery iframe{width:100%;height:360px;display:block;object-fit:cover;background:#0a0f14}
+.gallery img, .gallery iframe, .gallery video{width:100%;height:360px;display:block;object-fit:cover;background:#0a0f14}
 .thumbs{display:flex;gap:.4rem;overflow:auto;padding:.5rem;background:#0c1219;border-top:1px solid rgba(255,255,255,.06)}
 .thumbs img{height:58px;width:96px;object-fit:cover;border-radius:10px;opacity:.75;cursor:pointer;border:1px solid rgba(255,255,255,.08)}
 .thumbs img.active{opacity:1;outline:2px solid var(--accent)}
@@ -106,6 +106,11 @@ audio{width:100%}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
+// --- CONFIGURA TU CLOUDINARY ---
+const CLOUDINARY_CLOUD_NAME = 'drssjjayn';
+const CLOUDINARY_UPLOAD_PRESET = 'netlify_upload';
+
+// --- MAPA ---
 const map = L.map('map', { zoomControl:false, worldCopyJump:true }).setView([4.7110, -74.0721], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap' }).addTo(map);
 L.control.zoom({ position:'bottomright' }).addTo(map);
@@ -113,10 +118,9 @@ L.control.zoom({ position:'bottomright' }).addTo(map);
 const cluster = L.markerClusterGroup({ showCoverageOnHover:false, spiderfyOnMaxZoom:true, maxClusterRadius:48 });
 const icon = L.divIcon({ html:`<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 0 4px rgba(0,194,255,.15), 0 0 20px rgba(0,194,255,.4);"></div>`, className:'marker-dot', iconSize:[22,22]});
 const markersIndex = new Map();
-const places = []; // array dinámico
+const places = [];
 
 function updateCount(){ document.getElementById('count').textContent = `${cluster.getLayers().length} elemento${cluster.getLayers().length!==1?'s':''}`;}
-
 function addPlace(p){
   const m = L.marker(p.coords, { icon });
   m.bindPopup(`<strong>${p.title}</strong><br><small>${(p.tags||[]).join(' · ')}</small>`);
@@ -124,7 +128,6 @@ function addPlace(p){
   cluster.addLayer(m);
   markersIndex.set(p.id, m);
 }
-
 map.addLayer(cluster);
 
 // --- Modal ---
@@ -140,6 +143,7 @@ const mAudio = document.getElementById('m-audio');
 const mVideo = document.getElementById('m-video');
 const mSave = document.getElementById('m-save');
 let currentPlace = null;
+let lastClick = null;
 
 document.getElementById('m-close').addEventListener('click', ()=> modal.classList.remove('open'));
 modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
@@ -155,9 +159,12 @@ function openModal(p){
   (currentPlace.media?.images||[]).forEach(src=>items.push({type:'img',src}));
   if(currentPlace.media?.video) items.unshift({type:'video',src:currentPlace.media.video});
   if(currentPlace.media?.audio) items.unshift({type:'audio',src:currentPlace.media.audio});
+
   function renderMain(it){
     if(it.type==='video'){ mGallery.innerHTML = `<video src="${it.src}" controls style="width:100%;height:360px"></video>`; }
     else if(it.type==='img'){ mGallery.innerHTML = `<img src="${it.src}" alt="${currentPlace.title}">`; }
+    else if(it.type==='audio'){ mGallery.innerHTML = `<audio src="${it.src}" controls></audio>`; }
+    else { mGallery.innerHTML = ''; }
   }
   items.forEach((it,idx)=>{
     const t = document.createElement('img');
@@ -174,9 +181,20 @@ function openModal(p){
   modal.classList.add('open');
 }
 
-// --- Crear nuevo lugar al hacer clic ---
-let lastClick = null;
 map.on('click', e=>{ lastClick = e.latlng; openModal(null); });
+
+// --- Subida directa a Cloudinary ---
+async function uploadFileDirect(file,type){
+  if(!file) return null;
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${type==='video'?'raw':'auto'}/upload`;
+  const form = new FormData();
+  form.append('file', file);
+  form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(url,{ method:'POST', body: form });
+  const json = await res.json();
+  if(!json.secure_url) throw new Error('Cloudinary upload failed');
+  return json.secure_url;
+}
 
 // --- Guardar lugar ---
 mSave.addEventListener('click', async ()=>{
@@ -184,16 +202,10 @@ mSave.addEventListener('click', async ()=>{
   const desc = mDesc.value;
   const tags = mTagsInput.value.split(',').map(t=>t.trim()).filter(Boolean);
   const media = { images:[], audio:null, video:null };
-  async function uploadFile(file,type){
-    if(!file) return null;
-    const form = new FormData(); form.append('file',file); form.append('type',type);
-    const res = await fetch('/.netlify/functions/upload',{ method:'POST', body:form });
-    const json = await res.json();
-    return json.url;
-  }
-  for(const f of mImages.files){ const url = await uploadFile(f,'image'); if(url) media.images.push(url); }
-  if(mAudio.files[0]) media.audio = await uploadFile(mAudio.files[0],'audio');
-  if(mVideo.files[0]) media.video = await uploadFile(mVideo.files[0],'video');
+
+  for(const f of mImages.files) media.images.push(await uploadFileDirect(f,'image'));
+  if(mAudio.files[0]) media.audio = await uploadFileDirect(mAudio.files[0],'audio');
+  if(mVideo.files[0]) media.video = await uploadFileDirect(mVideo.files[0],'video');
 
   currentPlace.title = title;
   currentPlace.description = desc;
@@ -204,11 +216,14 @@ mSave.addEventListener('click', async ()=>{
 
   addPlace(currentPlace);
   updateCount();
+
+  // Guardar en CMS si deseas
   await fetch('/.netlify/functions/cms-save',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(currentPlace)
   });
+
   modal.classList.remove('open');
 });
 
@@ -221,7 +236,7 @@ document.getElementById('search').addEventListener('input', e=>{
     return blob.includes(q);
   });
   filtered.forEach(addPlace);
-  if(filtered.length) map.fitBounds(cluster.getBounds(), { padding:[30,30] });
+  if(filtered.length) map.fitBounds(cluster.getBounds(),{padding:[30,30]});
   updateCount();
 });
 
