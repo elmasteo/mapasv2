@@ -185,12 +185,12 @@
       }
     ];
 
-    async function loadPlaces() {
+async function loadPlaces() {
   try {
-    const res = await fetch('/lugares.json'); // JSON que combina todos los archivos o uno por lugar
+    const res = await fetch('/data/lugares.json'); // archivo único
     const data = await res.json();
-    return data.map((p, i) => ({
-      id: p.id || i,
+    return (data.lugares || []).map((p, i) => ({
+      id: i + 1,
       title: p.title,
       coords: [p.lat, p.lng],
       description: p.description,
@@ -206,6 +206,7 @@
     return [];
   }
 }
+
 
 // Inicializar mapa
 async function initMap() {
