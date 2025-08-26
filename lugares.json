@@ -40,23 +40,18 @@
     ]
   },
   {
-    "id": 1756252664304,
+    "id": 1756252747706,
     "coords": [
-      4.7024315870867515,
-      -74.11006271839143
+      4.701758266898477,
+      -74.10902202129365
     ],
-    "title": "Casita",
+    "title": "Otro lugar",
     "media": {
       "images": [],
       "audios": [],
       "videos": []
     },
-    "description": "Casita nuestra casita, hogar dulce hogar",
-    "tags": [
-      "casa",
-      "hogar",
-      "nuestra",
-      "casita"
-    ]
+    "description": "prueba de lugar",
+    "tags": []
   }
 ]
