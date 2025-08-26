@@ -8,8 +8,22 @@ const GITHUB_BRANCH = process.env.GITHUB_BRANCH;
 const DATA_FILE = "lugares.json";
 const MEDIA_DIR = "media";
 
+// helper para obtener SHA si el archivo ya existe
+async function getFileSha(filePath) {
+  const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`;
+  const res = await fetch(apiUrl, {
+    headers: { Authorization: `token ${GITHUB_TOKEN}` }
+  });
+  if (res.ok) {
+    const json = await res.json();
+    return json.sha;
+  }
+  return null; // no existe
+}
+
 // helper para subir archivo a GitHub
-async function commitToGitHub(filePath, base64Content, message, sha) {
+async function commitToGitHub(filePath, base64Content, message) {
+  const sha = await getFileSha(filePath);
   const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`;
 
   const payload = { message, branch: GITHUB_BRANCH, content: base64Content };
@@ -102,11 +116,8 @@ exports.handler = async (event) => {
     places.push(body);
 
     // Guardar places.json actualizado
-    await commitToGitHub(
-      DATA_FILE,
-      Buffer.from(JSON.stringify(places, null, 2)).toString("base64"),
-      `Add place ${body.id || "new"}`
-    );
+    const jsonBase64 = Buffer.from(JSON.stringify(places, null, 2)).toString("base64");
+    await commitToGitHub(DATA_FILE, jsonBase64, `Add place ${body.id || "new"}`);
 
     return { statusCode: 200, body: JSON.stringify({ ok: true, place: body }) };
   } catch (err) {
