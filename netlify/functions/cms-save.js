@@ -1,39 +1,116 @@
-const fetch = require('node-fetch');
+// /.netlify/functions/cms-save.js
+const fetch = require("node-fetch");
+const Busboy = require("busboy");
 
-exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') 
-    return { statusCode: 405, body: 'Method not allowed' };
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = process.env.GITHUB_REPO;
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH;
+const DATA_FILE = "lugares.json";
+const MEDIA_DIR = "media";
 
-  try {
-    const data = JSON.parse(event.body);
+// helper para subir archivo a GitHub
+async function commitToGitHub(filePath, base64Content, message, sha) {
+  const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`;
 
-    const url = `https://api.netlify.com/api/v1/sites/${process.env.NETLIFY_SITE_ID}/cms/collections/places/entries`;
+  const payload = { message, branch: GITHUB_BRANCH, content: base64Content };
+  if (sha) payload.sha = sha;
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.NETLIFY_API_TOKEN}`
-      },
-      body: JSON.stringify({ entry: data })
+  const resp = await fetch(apiUrl, {
+    method: "PUT",
+    headers: {
+      Authorization: `token ${GITHUB_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(`GitHub commit failed: ${err}`);
+  }
+  return resp.json();
+}
+
+// parse multipart/form-data si envían archivos
+async function parseMultipart(event) {
+  return new Promise((resolve, reject) => {
+    const headers = {};
+    Object.entries(event.headers || {}).forEach(([k,v]) => headers[k.toLowerCase()] = v);
+
+    const busboy = Busboy({ headers });
+    const result = { fields: {}, files: [] };
+
+    busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
+      let buffer = [];
+      file.on("data", (data) => buffer.push(data));
+      file.on("end", () => {
+        result.files.push({
+          name: filename,
+          type: mimetype,
+          data: Buffer.concat(buffer).toString("base64")
+        });
+      });
     });
 
-    // Leer el texto crudo primero
-    const text = await res.text();
+    busboy.on("field", (fieldname, val) => {
+      result.fields[fieldname] = val;
+    });
 
-    let json;
-    try { 
-      json = JSON.parse(text); 
-    } catch(e) {
-      throw new Error(`CMS save failed, response not JSON: ${text}`);
+    busboy.on("finish", () => resolve(result));
+    busboy.on("error", reject);
+
+    busboy.end(Buffer.from(event.body, "base64"));
+  });
+}
+
+exports.handler = async (event) => {
+  try {
+    if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
+
+    let body;
+    let files = [];
+
+    const contentType = event.headers["content-type"] || event.headers["Content-Type"];
+    if (contentType?.includes("multipart/form-data")) {
+      const parsed = await parseMultipart(event);
+      body = parsed.fields.payload ? JSON.parse(parsed.fields.payload) : parsed.fields;
+      files = parsed.files;
+    } else {
+      body = JSON.parse(event.body);
+      files = body.files || [];
     }
 
-    if (!res.ok) throw new Error(json.msg || 'CMS save failed');
+    // Traer JSON actual
+    let places = [];
+    try {
+      const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${DATA_FILE}`);
+      if (res.ok) places = await res.json();
+    } catch {}
 
-    return { statusCode: 200, body: JSON.stringify({ success: true, entry: json }) };
+    body.media = { images: [], audios: [], videos: [] };
 
-  } catch (e) {
-    console.error(e);
-    return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+    for (const file of files) {
+      const filePath = `${MEDIA_DIR}/${file.name}`;
+      const safeBase64 = Buffer.from(file.data, "base64").toString("base64");
+      await commitToGitHub(filePath, safeBase64, `Add media ${file.name}`);
+
+      if (file.type.startsWith("image/")) body.media.images.push(`/${filePath}`);
+      if (file.type.startsWith("audio/")) body.media.audios.push(`/${filePath}`);
+      if (file.type.startsWith("video/")) body.media.videos.push(`/${filePath}`);
+    }
+
+    places.push(body);
+
+    // Guardar places.json actualizado
+    await commitToGitHub(
+      DATA_FILE,
+      Buffer.from(JSON.stringify(places, null, 2)).toString("base64"),
+      `Add place ${body.id || "new"}`
+    );
+
+    return { statusCode: 200, body: JSON.stringify({ ok: true, place: body }) };
+  } catch (err) {
+    console.error(err);
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
