@@ -20,24 +20,23 @@
     ]
   },
   {
-    "id": 1756251666672,
+    "id": 1756251839396,
     "coords": [
-      4.7107542962106335,
-      -74.10967111587526
+      4.709492677525449,
+      -74.11022901535036
     ],
-    "title": "Hospital Engativá",
+    "title": "Portal 80",
     "media": {
       "images": [],
       "audios": [],
       "videos": []
     },
-    "description": "Prueba nuevo lugar hospital",
+    "description": "Portal de la 80",
     "tags": [
-      "hospital",
-      "cerca",
       "portal",
-      "nuevo",
-      "prueba"
+      "transmilenio",
+      "80",
+      "nuevo"
     ]
   }
 ]
