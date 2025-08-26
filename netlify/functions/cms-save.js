@@ -119,6 +119,14 @@ exports.handler = async (event) => {
     const jsonBase64 = Buffer.from(JSON.stringify(places, null, 2)).toString("base64");
     await commitToGitHub(DATA_FILE, jsonBase64, `Add place ${body.id || "new"}`);
 
+    if(body.deleteId){
+    places = places.filter(p=>p.id !== body.deleteId);
+    // Guardar places.json actualizado
+    const jsonBase64 = Buffer.from(JSON.stringify(places, null, 2)).toString("base64");
+    await commitToGitHub(DATA_FILE, jsonBase64, `Delete place ${body.deleteId}`);
+    return { statusCode:200, body: JSON.stringify({ok:true, deleted: body.deleteId}) };
+  }
+
     return { statusCode: 200, body: JSON.stringify({ ok: true, place: body }) };
   } catch (err) {
     console.error(err);

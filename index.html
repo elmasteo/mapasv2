@@ -150,10 +150,14 @@ modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove
 
 function openModal(p){
   currentPlace = p || { id:Date.now(), coords:lastClick || map.getCenter(), title:'Nuevo lugar', media:{} };
+  
+  // Mostrar título como texto, editable solo al presionar "Editar"
   mTitle.textContent = currentPlace.title || '';
+  
   mTags.innerHTML = (currentPlace.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
   mDesc.value = currentPlace.description || '';
   mTagsInput.value = (currentPlace.tags||[]).join(',');
+  
   mGallery.innerHTML = ''; mThumbs.innerHTML = '';
   const items = [];
   (currentPlace.media?.images||[]).forEach(src=>items.push({type:'img',src}));
@@ -178,7 +182,48 @@ function openModal(p){
     if(idx===0) t.classList.add('active');
   });
   renderMain(items[0]||{type:'none'});
+  
+  // Crear botones "Editar" y "Eliminar" si no existen
+  if(!document.getElementById('m-edit')){
+    const btnEdit = document.createElement('button');
+    btnEdit.id='m-edit'; btnEdit.className='btn'; btnEdit.textContent='Editar'; 
+    btnEdit.addEventListener('click', ()=> enableEditing(true));
+    modal.querySelector('.details').appendChild(btnEdit);
+
+    const btnDel = document.createElement('button');
+    btnDel.id='m-delete'; btnDel.className='btn'; btnDel.textContent='Eliminar';
+    btnDel.addEventListener('click', async ()=>{
+      if(!confirm('¿Eliminar este lugar?')) return;
+      // Eliminar del mapa
+      const marker = markersIndex.get(currentPlace.id);
+      if(marker){ cluster.removeLayer(marker); markersIndex.delete(currentPlace.id); }
+      // Eliminar de places
+      const idx = places.findIndex(x=>x.id===currentPlace.id);
+      if(idx>=0) places.splice(idx,1);
+      updateCount();
+      // Guardar cambios en CMS/GitHub
+      await fetch('/.netlify/functions/cms-save',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({deleteId: currentPlace.id})
+      });
+      modal.classList.remove('open');
+    });
+    modal.querySelector('.details').appendChild(btnDel);
+  }
+
+  enableEditing(false);
   modal.classList.add('open');
+
+  function enableEditing(flag){
+    mDesc.disabled = !flag;
+    mTagsInput.disabled = !flag;
+    mImages.disabled = !flag;
+    mAudio.disabled = !flag;
+    mVideo.disabled = !flag;
+    mTitle.contentEditable = flag; // Editable título
+    mSave.style.display = flag ? 'block' : 'none';
+  }
 }
 
 map.on('click', e=>{ lastClick = e.latlng; openModal(null); });
@@ -198,10 +243,8 @@ async function uploadFileDirect(file,type){
 
 // --- Guardar lugar ---
 mSave.addEventListener('click', async ()=>{
-  const title = mTitle.textContent || 'Nuevo lugar';
-  const desc = mDesc.value;
-  const tags = mTagsInput.value.split(',').map(t=>t.trim()).filter(Boolean);
-  const media = { images:[], audio:null, video:null };
+  const title = mTitle.textContent.trim() || 'Nuevo lugar';
+  currentPlace.title = title;
 
   for(const f of mImages.files) media.images.push(await uploadFileDirect(f,'image'));
   if(mAudio.files[0]) media.audio = await uploadFileDirect(mAudio.files[0],'audio');
