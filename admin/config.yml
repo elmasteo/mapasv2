@@ -8,7 +8,7 @@ public_folder: "/media"            # URL pública de acceso a los archivos
 collections:
   - name: "lugares"
     label: "Lugares"
-    folder: "."
+    folder: "data/lugares"
     filename: "lugares"  # cada lugar se guardará como archivo JSON o Markdown
     create: true
     slug: "{{slug}}"
