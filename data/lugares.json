@@ -20,6 +20,26 @@
       "audios": [
         "/media/jennie-like-jennie-official-video-jennierubyjanevevo.mp3"
       ]
+    },
+    {
+      "tags": [
+        "casa",
+        "hogar",
+        "prueba"
+      ],
+      "title": "Casa santiago",
+      "description": "Casa de santiago",
+      "lat": 4,
+      "lng": 71,
+      "images": [
+        "/media/rifa-pc.jpg"
+      ],
+      "videos": [
+        "/media/jennie-like-jennie-official-video-jennierubyjanevevo-144p-h264-.mp4"
+      ],
+      "audios": [
+        "/media/jennie-like-jennie-official-video-jennierubyjanevevo.mp3"
+      ]
     }
   ]
 }
