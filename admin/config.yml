@@ -1,0 +1,41 @@
+backend:
+  name: git-gateway
+  branch: master  # rama donde se guardarán los datos
+
+media_folder: "media"       # carpeta donde se guardarán imágenes, videos, audios
+public_folder: "/media"            # URL pública de acceso a los archivos
+
+collections:
+  - name: "lugares"
+    label: "Lugares"
+    folder: "."
+    filename: "lugares"  # cada lugar se guardará como archivo JSON o Markdown
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Título", name: "title", widget: "string" }
+      - { label: "Descripción", name: "description", widget: "text" }
+      - { label: "Latitud", name: "lat", widget: "number", step: 0.000001 }
+      - { label: "Longitud", name: "lng", widget: "number", step: 0.000001 }
+      - { label: "Tags", name: "tags", widget: "list", default: [] }
+      - label: "Imágenes"
+        name: "images"
+        widget: "list"
+        field:
+          label: "Imagen"
+          name: "image"
+          widget: "image"
+      - label: "Videos"
+        name: "videos"
+        widget: "list"
+        field:
+          label: "Video (embed URL)"
+          name: "video"
+          widget: "string"
+      - label: "Audios"
+        name: "audios"
+        widget: "list"
+        field:
+          label: "Audio (archivo o URL)"
+          name: "audio"
+          widget: "file"

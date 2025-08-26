@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapa interactivo – Fichas multimedia</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#121822; --muted:#95a3b3; --text:#e8edf2; --accent:#52b788; --accent-2:#00c2ff;
+      --card:#0f141b; --shadow:0 10px 30px rgba(0,0,0,.3);
+    }
+    *{box-sizing:border-box}
+    html,body,#app{height:100%;margin:0}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(120deg,#0b0f14,#111826);color:var(--text)}
+    #app{display:grid;grid-template-rows:auto 1fr}
+
+    /* Top bar */
+    .topbar{display:flex;gap:.75rem;align-items:center;padding:.75rem 1rem;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);position:sticky;top:0;z-index:1000}
+    .brand{display:flex;align-items:center;gap:.5rem;font-weight:700;letter-spacing:.3px}
+    .brand .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(45deg,var(--accent),var(--accent-2));box-shadow:0 0 14px var(--accent-2)}
+    .topbar .actions{display:flex;gap:.5rem;margin-left:auto}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--text);padding:.55rem .8rem;border-radius:12px;cursor:pointer;transition:.2s;backdrop-filter:blur(2px)}
+    .btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.2)}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#001018;border:none}
+    .field{position:relative;min-width:260px}
+    .field input{width:100%;background:#0c121a;border:1px solid rgba(255,255,255,.08);color:var(--text);padding:.6rem .8rem .6rem 2.2rem;border-radius:12px;outline:none}
+    .field svg{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);opacity:.7}
+
+    /* Map + overlay */
+    #map{height:100%;width:100%}
+    .overlay{position:absolute;right:1rem;top:5.5rem;display:flex;flex-direction:column;gap:.6rem;z-index:999}
+    .chip{padding:.45rem .7rem;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:.85rem}
+
+    /* Modal card */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:1rem;z-index:2000}
+    .modal.open{display:flex}
+    .card{width:min(900px,96vw);background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+    .card header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1rem .5rem 1rem;border-bottom:1px solid rgba(255,255,255,.06)}
+    .card h3{margin:.2rem 0;font-size:1.25rem}
+    .tags{display:flex;flex-wrap:wrap;gap:.4rem}
+    .tag{font-size:.75rem;background:rgba(82,183,136,.15);border:1px solid rgba(82,183,136,.4);color:#bff3d6;padding:.25rem .5rem;border-radius:999px}
+    .content{display:grid;gap:1rem;padding:1rem}
+    @media(min-width:900px){.content{grid-template-columns:1.4fr 1fr}}
+
+    /* Gallery */
+    .gallery{position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+    .gallery img, .gallery iframe{width:100%;height:360px;display:block;object-fit:cover;background:#0a0f14}
+    .thumbs{display:flex;gap:.4rem;overflow:auto;padding:.5rem;background:#0c1219;border-top:1px solid rgba(255,255,255,.06)}
+    .thumbs img{height:58px;width:96px;object-fit:cover;border-radius:10px;opacity:.75;cursor:pointer;border:1px solid rgba(255,255,255,.08)}
+    .thumbs img.active{opacity:1;outline:2px solid var(--accent)}
+
+    /* Details */
+    .details{display:flex;flex-direction:column;gap:.75rem}
+    .details p{color:var(--muted);line-height:1.6;margin:0}
+    audio{width:100%}
+
+    .close{cursor:pointer;border:none;background:transparent;color:var(--muted);font-size:1.2rem}
+
+    /* Leaflet tweaks */
+    .leaflet-container{background:#0a0f14}
+    .leaflet-control-attribution{background:rgba(0,0,0,.4);color:#ddd;border-radius:10px;padding:.2rem .4rem}
+    .leaflet-popup-content-wrapper{background:#0d1320;color:#e8edf2;border:1px solid rgba(255,255,255,.1);border-radius:14px}
+    .leaflet-popup-tip{background:#0d1320}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span>Mapa interactivo</div>
+      <div class="field" style="flex:1;max-width:520px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/></svg>
+        <input id="search" placeholder="Buscar por título, descripción o etiquetas…" />
+      </div>
+      <div class="actions">
+        <button id="locate" class="btn" title="Mi ubicación">📍 Ubicarme</button>
+        <button id="reset" class="btn" title="Ver todo">🔎 Reset</button>
+        <label class="btn" title="Importar GeoJSON">
+          ⬆️ Importar
+          <input id="geojsonFile" type="file" accept=".geojson,.json" hidden />
+        </label>
+        <button id="theme" class="btn primary" title="Cambiar tema">Modo dinámico</button>
+      </div>
+    </div>
+
+    <div style="position:relative">
+      <div id="map"></div>
+      <div class="overlay">
+        <div class="chip">Clic en un punto para abrir la ficha</div>
+        <div class="chip" id="count">0 elementos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="card">
+      <header>
+        <div>
+          <h3 id="m-title">Título</h3>
+          <div class="tags" id="m-tags"></div>
+        </div>
+        <button class="close" id="m-close">✕</button>
+      </header>
+      <div class="content">
+        <div>
+          <div class="gallery" id="m-gallery"></div>
+          <div class="thumbs" id="m-thumbs"></div>
+        </div>
+        <div class="details">
+          <p id="m-desc"></p>
+          <audio id="m-audio" controls></audio>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script>
+    // --- Datos de ejemplo (remplaza con tu API/BD) ---
+
+    async function loadPlaces() {
+  try {
+    const res = await fetch('/lugares.json'); // JSON que combina todos los archivos o uno por lugar
+    const data = await res.json();
+    return data.map((p, i) => ({
+      id: p.id || i,
+      title: p.title,
+      coords: [p.lat, p.lng],
+      description: p.description,
+      tags: p.tags || [],
+      media: {
+        images: p.images || [],
+        video: p.videos?.[0] || null,
+        audio: p.audios?.[0] || null
+      }
+    }));
+  } catch (e) {
+    console.error('Error cargando lugares desde CMS:', e);
+    return [];
+  }
+}
+
+// Inicializar mapa
+async function initMap() {
+  const cmsPlaces = await loadPlaces();
+  cmsPlaces.forEach(addPlace);
+  if(cmsPlaces.length) map.fitBounds(cluster.getBounds(), { padding:[20,20] });
+  updateCount();
+}
+
+// Vaciar la lista de lugares estática y usar CMS
+places.length = 0;
+initMap();
+
+    const places = [
+      {
+        id: 1,
+        title: "Museo de la Ciudad",
+        coords: [4.65108, -74.10363],
+        description: "Espacio cultural con exhibiciones permanentes y temporales.",
+        tags: ["cultura", "historia"],
+        media: {
+          images: [
+            "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1200&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1200&auto=format&fit=crop"
+          ],
+          video: "https://www.youtube.com/embed/Scxs7L0vhZ4",
+          audio: "https://www2.cs.uic.edu/~i101/SoundFiles/StarWars60.wav"
+        }
+      },
+      {
+        id: 2,
+        title: "Parque Central",
+        coords: [4.7110, -74.0721],
+        description: "Áreas verdes, senderos y eventos al aire libre.",
+        tags: ["naturaleza", "recreación"],
+        media: {
+          images: [
+            "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1200&auto=format&fit=crop"
+          ],
+          video: null,
+          audio: null
+        }
+      },
+      {
+        id: 3,
+        title: "Teatro Mayor",
+        coords: [4.6935, -74.0467],
+        description: "Presentaciones de música y artes escénicas.",
+        tags: ["teatro", "música"],
+        media: {
+          images: [
+            "https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1200&auto=format&fit=crop"
+          ],
+          video: "https://player.vimeo.com/video/76979871?h=8272103f6e",
+          audio: null
+        }
+      }
+    ];
+
+    // --- Mapa ---
+    const map = L.map('map', { zoomControl: false, worldCopyJump: true }).setView([4.7110, -74.0721], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    const cluster = L.markerClusterGroup({
+      showCoverageOnHover:false,
+      spiderfyOnMaxZoom:true,
+      maxClusterRadius: 48
+    });
+
+    const icon = L.divIcon({
+      html: `<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 0 0 4px rgba(0,194,255,.15), 0 0 20px rgba(0,194,255,.4);"></div>`,
+      className: 'marker-dot', iconSize: [22,22]
+    });
+
+    const markersIndex = new Map();
+
+    function addPlace(p){
+      const m = L.marker(p.coords, { icon });
+      m.bindPopup(`<strong>${p.title}</strong><br><small>${(p.tags||[]).join(' · ')}</small>`);
+      m.on('click',()=> openModal(p));
+      cluster.addLayer(m);
+      markersIndex.set(p.id, m);
+    }
+
+    places.forEach(addPlace);
+    map.addLayer(cluster);
+    map.fitBounds(cluster.getBounds(), { padding:[20,20] });
+    updateCount();
+
+    function updateCount(){
+      const n = cluster.getLayers().length;
+      document.getElementById('count').textContent = `${n} elemento${n!==1?'s':''}`;
+    }
+
+    // --- Búsqueda simple ---
+    const searchInput = document.getElementById('search');
+    searchInput.addEventListener('input', (e)=>{
+      const q = e.target.value.trim().toLowerCase();
+      cluster.clearLayers();
+      markersIndex.clear();
+      const filtered = places.filter(p=>{
+        const blob = [p.title, p.description, ...(p.tags||[])].join(' ').toLowerCase();
+        return blob.includes(q);
+      });
+      filtered.forEach(addPlace);
+      if(filtered.length){
+        map.fitBounds(cluster.getBounds(), { padding:[30,30] });
+      }
+      updateCount();
+    });
+
+    document.getElementById('reset').addEventListener('click', ()=>{
+      searchInput.value = '';
+      cluster.clearLayers();
+      markersIndex.clear();
+      places.forEach(addPlace);
+      map.fitBounds(cluster.getBounds(), { padding:[20,20] });
+      updateCount();
+    });
+
+    // --- Geolocalización ---
+    document.getElementById('locate').addEventListener('click', ()=>{
+      map.locate({ setView:true, maxZoom:15, enableHighAccuracy:true });
+    });
+
+    // --- Modal / Ficha ---
+    const modal = document.getElementById('modal');
+    const mTitle = document.getElementById('m-title');
+    const mTags = document.getElementById('m-tags');
+    const mDesc = document.getElementById('m-desc');
+    const mAudio = document.getElementById('m-audio');
+    const mGallery = document.getElementById('m-gallery');
+    const mThumbs = document.getElementById('m-thumbs');
+
+    document.getElementById('m-close').addEventListener('click', ()=> modal.classList.remove('open'));
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.classList.remove('open'); });
+
+    function openModal(p){
+      mTitle.textContent = p.title || '';
+      mTags.innerHTML = (p.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+      mDesc.textContent = p.description || '';
+
+      // Audio
+      if(p.media?.audio){
+        mAudio.src = p.media.audio; mAudio.style.display='block';
+      } else { mAudio.removeAttribute('src'); mAudio.style.display='none'; }
+
+      // Galería principal (imagen o video)
+      mGallery.innerHTML = '';
+      mThumbs.innerHTML = '';
+
+      const items = [];
+      (p.media?.images||[]).forEach(src=> items.push({type:'img', src}));
+      if(p.media?.video){ items.unshift({type:'video', src:p.media.video}); }
+
+      if(items.length===0){
+        mGallery.innerHTML = '<div style="display:grid;place-items:center;height:280px;color:#8aa">Sin medios</div>';
+        modal.classList.add('open');
+        return;
+      }
+
+      function renderMain(it){
+        if(it.type==='video'){
+          mGallery.innerHTML = `<iframe src="${it.src}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+        } else {
+          mGallery.innerHTML = `<img src="${it.src}" alt="${p.title}">`;
+        }
+      }
+
+      items.forEach((it, idx)=>{
+        if(it.type==='img'){
+          const t = document.createElement('img');
+          t.src = it.src; if(idx===0) t.classList.add('active');
+          t.addEventListener('click', ()=>{
+            [...mThumbs.children].forEach(n=>n.classList.remove('active'));
+            t.classList.add('active');
+            renderMain(it);
+          });
+          mThumbs.appendChild(t);
+        } else {
+          // Miniatura para video
+          const t = document.createElement('img');
+          t.src = 'https://images.unsplash.com/photo-1523246221164-348cccb3d987?q=80&w=300&auto=format&fit=crop';
+          t.title = 'Video';
+          t.addEventListener('click', ()=>{
+            [...mThumbs.children].forEach(n=>n.classList.remove('active'));
+            t.classList.add('active');
+            renderMain(it);
+          });
+          mThumbs.prepend(t);
+          t.classList.add('active');
+        }
+      });
+
+      // Mostrar primero elemento (video si existe)
+      renderMain(items[0]);
+
+      modal.classList.add('open');
+    }
+
+    // --- Importar GeoJSON (Point features) ---
+    document.getElementById('geojsonFile').addEventListener('change', (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const gj = JSON.parse(reader.result);
+          const feats = (gj.features||[]).filter(f=>f.geometry?.type==='Point');
+          feats.forEach((f,i)=>{
+            const [lng,lat] = f.geometry.coordinates; // GeoJSON order
+            const props = f.properties||{};
+            places.push({
+              id: Date.now()+i,
+              title: props.title || props.name || `Punto ${i+1}`,
+              coords: [lat,lng],
+              description: props.description || '',
+              tags: props.tags || [],
+              media: {
+                images: props.images || [],
+                video: props.video || null,
+                audio: props.audio || null
+              }
+            });
+          });
+          // refrescar lista
+          document.getElementById('reset').click();
+        }catch(err){
+          alert('Archivo no válido: '+err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // --- Tema dinámico (animación simple) ---
+    const themeBtn = document.getElementById('theme');
+    let dynamic = false; let raf; let startTs;
+    themeBtn.addEventListener('click', ()=>{
+      dynamic = !dynamic; themeBtn.textContent = dynamic? 'Dinámico: ON' : 'Modo dinámico';
+      if(dynamic){ animateBg(); } else { cancelAnimationFrame(raf); document.body.style.background = 'linear-gradient(120deg,#0b0f14,#111826)'; }
+    });
+    function animateBg(ts){
+      if(!startTs) startTs = ts||0; const t = ((ts||0)-startTs)/1000;
+      const c1 = `hsl(${(200+40*Math.sin(t))%360} 45% 8%)`;
+      const c2 = `hsl(${(220+40*Math.cos(t*0.8))%360} 45% 13%)`;
+      document.body.style.background = `linear-gradient(120deg, ${c1}, ${c2})`;
+      raf = requestAnimationFrame(animateBg);
+    }
+  </script>
+</body>
+</html>
