@@ -20,19 +20,24 @@
     ]
   },
   {
-    "id": 1756252747706,
+    "id": 1756251839396,
     "coords": [
-      4.701758266898477,
-      -74.10902202129365
+      4.709492677525449,
+      -74.11022901535036
     ],
-    "title": "Otro lugar",
+    "title": "Portal 80",
     "media": {
       "images": [],
       "audios": [],
       "videos": []
     },
-    "description": "prueba de lugar",
-    "tags": []
+    "description": "Portal de la 80",
+    "tags": [
+      "portal",
+      "transmilenio",
+      "80",
+      "nuevo"
+    ]
   },
   {
     "id": 1756253300168,
