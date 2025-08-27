@@ -26,5 +26,31 @@
       "mercedez",
       "editada"
     ]
+  },
+  {
+    "id": 1756302779915,
+    "coords": [
+      4.70950066797056,
+      -74.11027729511262
+    ],
+    "title": "Portal de la 80",
+    "media": {
+      "images": [
+        "https://res.cloudinary.com/drssjjayn/image/upload/v1756302812/jtwugbjlahe0qz2mfzgz.jpg"
+      ],
+      "audios": [
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756302813/jx529xurqtjjwffhbvlh.mp3"
+      ],
+      "videos": [
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756302815/odjfw0zwrvu6u0jjshs2.mp4"
+      ]
+    },
+    "description": "Aquí va el portal 80",
+    "tags": [
+      "portal",
+      "transmilenio",
+      "80",
+      "nuevo"
+    ]
   }
 ]
