@@ -191,7 +191,10 @@ function openModal(p){
   }
   items.forEach((it,idx)=>{
     const t = document.createElement('img');
-    t.src = it.type==='img'?it.src:'https://images.unsplash.com/photo-1523246221164-348cccb3d987?q=80&w=300&auto=format&fit=crop';
+    if(it.type==='img'){ t.src = it.src; t.title='Imagen'; }
+    else if(it.type==='video'){ t.src = 'https://images.unsplash.com/photo-1523246221164-348cccb3d987?q=80&w=300'; t.title='Video'; }
+    else if(it.type==='audio'){ t.src = 'https://images.unsplash.com/photo-1605902711622-cfb43c4430b0?q=80&w=300'; t.title='Audio'; }
+
     t.title = it.type==='video'?'Video':'Imagen';
     t.addEventListener('click', ()=>{
       [...mThumbs.children].forEach(n=>n.classList.remove('active'));
@@ -266,11 +269,11 @@ mSave.addEventListener('click', async ()=>{
   currentPlace.title = title;
   const desc = mDesc.value;
   const tags = mTagsInput.value.split(',').map(t=>t.trim()).filter(Boolean);
-  const media = { images:[], audio:null, video:null };
+  const media = { images:[], audios:[], videos:[] };
 
   for(const f of mImages.files) media.images.push(await uploadFileDirect(f,'image'));
-  if(mAudio.files[0]) media.audio = await uploadFileDirect(mAudio.files[0],'audio');
-  if(mVideo.files[0]) media.video = await uploadFileDirect(mVideo.files[0],'video');
+  for(const f of mAudio.files) media.audios.push(await uploadFileDirect(f,'audio'));
+  for(const f of mVideo.files) media.videos.push(await uploadFileDirect(f,'video'));
 
   currentPlace.title = title;
   currentPlace.description = desc;
