@@ -2,28 +2,29 @@
   {
     "id": 1756301513756,
     "coords": [
-      4.7920886240345295,
-      -74.34146493673326
+      4.650895731602796,
+      -74.30053710937501
     ],
-    "title": "Casa suegros",
+    "title": "Casa suegros editado",
     "media": {
       "images": [
-        "https://res.cloudinary.com/drssjjayn/image/upload/v1756301564/ekmft3p8n6swnvjfm6qo.jpg"
+        "https://res.cloudinary.com/drssjjayn/image/upload/v1756302220/omwqsibyhc1sce7jfphx.jpg"
       ],
       "audios": [
-        "https://res.cloudinary.com/drssjjayn/video/upload/v1756301565/kgrhm1g8uqxbztj8z2nv.mp3"
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756302221/x0zejzihjyillzwhnjdq.mp3"
       ],
       "videos": [
-        "https://res.cloudinary.com/drssjjayn/video/upload/v1756301566/qxicdvr5y9etqh8wuxm9.mp4"
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756302222/ymrw8exwmnblyvdva9zz.mp4"
       ]
     },
-    "description": "Esta es la casa de los suegros",
+    "description": "Esta es la casa de los suegros editada",
     "tags": [
       "casa",
       "suegros",
       "hogar",
       "wilson",
-      "mercedez"
+      "mercedez",
+      "editada"
     ]
   }
 ]
