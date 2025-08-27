@@ -1,5 +1,25 @@
 [
   {
+    "id": 1756251040033,
+    "coords": [
+      4.710879912608426,
+      -74.11236405372621
+    ],
+    "title": "Nuevo lugar",
+    "media": {
+      "images": [],
+      "audios": [],
+      "videos": []
+    },
+    "description": "Portal 80 ",
+    "tags": [
+      "portal",
+      "transmilenio",
+      "80",
+      "nuevo"
+    ]
+  },
+  {
     "id": 1756251839396,
     "coords": [
       4.709492677525449,
@@ -33,25 +53,5 @@
     },
     "description": "prueba de lugar",
     "tags": []
-  },
-  {
-    "id": 1756253300168,
-    "coords": [
-      4.710495161885778,
-      -74.10690307617189
-    ],
-    "title": "Bachue",
-    "media": {
-      "images": [],
-      "audios": [],
-      "videos": []
-    },
-    "description": "Nuevo bachue",
-    "tags": [
-      "bachue",
-      "casa",
-      "potreo",
-      "vacas"
-    ]
   }
 ]
