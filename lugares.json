@@ -1,25 +1,5 @@
 [
   {
-    "id": 1756251040033,
-    "coords": [
-      4.710879912608426,
-      -74.11236405372621
-    ],
-    "title": "Nuevo lugar",
-    "media": {
-      "images": [],
-      "audios": [],
-      "videos": []
-    },
-    "description": "Portal 80 ",
-    "tags": [
-      "portal",
-      "transmilenio",
-      "80",
-      "nuevo"
-    ]
-  },
-  {
     "id": 1756251839396,
     "coords": [
       4.709492677525449,
@@ -72,33 +52,6 @@
       "casa",
       "potreo",
       "vacas"
-    ]
-  },
-  {
-    "id": 1756261420023,
-    "coords": [
-      4.710708339342272,
-      -74.12021756172182
-    ],
-    "title": "Parroquia verbo divino",
-    "media": {
-      "images": [
-        "https://res.cloudinary.com/drssjjayn/image/upload/v1756261465/dkelulum2tcq0hfn5uqb.jpg"
-      ],
-      "audios": [
-        "https://res.cloudinary.com/drssjjayn/video/upload/v1756261466/xulop0m0sq0abyhgo9uc.mp3"
-      ],
-      "videos": [
-        "https://res.cloudinary.com/drssjjayn/video/upload/v1756261467/rcjrushujaeymhvtisgd.mp4"
-      ]
-    },
-    "description": "Aquí queda una parroquía",
-    "tags": [
-      "parroquia",
-      "test",
-      "prueba",
-      "nuevo",
-      "iglesia"
     ]
   }
 ]
