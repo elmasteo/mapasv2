@@ -64,15 +64,18 @@ exports.handler = async (event) => {
       console.log("lugares.json aún no existe, se creará nuevo.");
     }
 
-    // si viene deleteId → eliminar
+    // === eliminar ===
     if (body.deleteId) {
       places = places.filter(p => p.id !== body.deleteId);
+
+      // 💡 aquí aseguramos que incluso [] se guarde en GitHub
       const jsonBase64 = Buffer.from(JSON.stringify(places, null, 2)).toString("base64");
       await commitToGitHub(DATA_FILE, jsonBase64, `Delete place ${body.deleteId}`);
-      return { statusCode: 200, body: JSON.stringify({ ok: true, deleted: body.deleteId }) };
+
+      return { statusCode: 200, body: JSON.stringify({ ok: true, deleted: body.deleteId, count: places.length }) };
     }
 
-    // insertar o reemplazar por id
+    // === insertar o actualizar ===
     const idx = places.findIndex(p => p.id === body.id);
     if (idx >= 0) {
       places[idx] = body; // update
@@ -80,11 +83,11 @@ exports.handler = async (event) => {
       places.push(body); // add
     }
 
-    // guardar lugares.json actualizado
+    // guardar siempre el archivo actualizado
     const jsonBase64 = Buffer.from(JSON.stringify(places, null, 2)).toString("base64");
     await commitToGitHub(DATA_FILE, jsonBase64, `Save place ${body.id || "new"}`);
 
-    return { statusCode: 200, body: JSON.stringify({ ok: true, place: body }) };
+    return { statusCode: 200, body: JSON.stringify({ ok: true, place: body, count: places.length }) };
   } catch (err) {
     console.error(err);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
