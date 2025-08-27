@@ -53,5 +53,25 @@
     },
     "description": "prueba de lugar",
     "tags": []
+  },
+  {
+    "id": 1756253300168,
+    "coords": [
+      4.710495161885778,
+      -74.10690307617189
+    ],
+    "title": "Bachue",
+    "media": {
+      "images": [],
+      "audios": [],
+      "videos": []
+    },
+    "description": "Nuevo bachue",
+    "tags": [
+      "bachue",
+      "casa",
+      "potreo",
+      "vacas"
+    ]
   }
 ]
