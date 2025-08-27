@@ -91,14 +91,23 @@ audio{width:100%}
         <div class="gallery" id="m-gallery"></div>
         <div class="thumbs" id="m-thumbs"></div>
       </div>
+            <!-- MODAL -->
       <div class="details">
         <textarea id="m-desc" placeholder="Descripción..." style="width:100%;height:80px;background:#0c121a;color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.5rem;"></textarea>
         <input type="text" id="m-tags-input" placeholder="Etiquetas separadas por coma" style="width:100%;margin:.5rem 0;padding:.5rem;border-radius:12px;background:#0c121a;border:1px solid rgba(255,255,255,.08);color:var(--text)">
+
+        <label for="m-images">📷 Imágenes:</label>
         <input type="file" id="m-images" multiple accept="image/*" style="margin-bottom:.5rem">
-        <input type="file" id="m-audio" accept="audio/*" style="margin-bottom:.5rem">
-        <input type="file" id="m-video" accept="video/*" style="margin-bottom:.5rem">
+
+        <label for="m-audio">🎵 Audios:</label>
+        <input type="file" id="m-audio" multiple accept="audio/*" style="margin-bottom:.5rem">
+
+        <label for="m-video">🎥 Videos:</label>
+        <input type="file" id="m-video" multiple accept="video/*" style="margin-bottom:.5rem">
+
         <button id="m-save" class="btn primary" style="width:100%">Guardar lugar</button>
       </div>
+
     </div>
   </div>
 </div>
@@ -190,19 +199,43 @@ function openModal(p){
     else { mGallery.innerHTML = ''; }
   }
   items.forEach((it,idx)=>{
-    const t = document.createElement('img');
-    if(it.type==='img'){ t.src = it.src; t.title='Imagen'; }
-    else if(it.type==='video'){ t.src = 'https://images.unsplash.com/photo-1523246221164-348cccb3d987?q=80&w=300'; t.title='Video'; }
-    else if(it.type==='audio'){ t.src = 'https://images.unsplash.com/photo-1605902711622-cfb43c4430b0?q=80&w=300'; t.title='Audio'; }
-
-    t.title = it.type==='video'?'Video':'Imagen';
-    t.addEventListener('click', ()=>{
+  const t = document.createElement('img');
+  if(it.type==='img'){ 
+    t.src = it.src; 
+    t.title='Imagen'; 
+  }
+  else if(it.type==='video'){ 
+    // mini video como thumb
+    const v = document.createElement('video');
+    v.src = it.src;
+    v.muted = true;
+    v.playsInline = true;
+    v.style.width = "96px";
+    v.style.height = "58px";
+    v.style.objectFit = "cover";
+    v.title = "Video";
+    v.addEventListener('click', ()=>{
       [...mThumbs.children].forEach(n=>n.classList.remove('active'));
-      t.classList.add('active'); renderMain(it);
+      v.classList.add('active'); renderMain(it);
     });
-    mThumbs.appendChild(t);
-    if(idx===0) t.classList.add('active');
+    mThumbs.appendChild(v);
+    if(idx===0) v.classList.add('active');
+    return;
+  }
+  else if(it.type==='audio'){ 
+    // Ícono de audio base64 inline
+    t.src = "data:image/svg+xml;base64,"+btoa(`<svg xmlns='http://www.w3.org/2000/svg' width='96' height='58'><rect width='100%' height='100%' fill='#222'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='20'>🎵</text></svg>`);
+    t.title='Audio'; 
+  }
+
+  t.addEventListener('click', ()=>{
+    [...mThumbs.children].forEach(n=>n.classList.remove('active'));
+    t.classList.add('active'); renderMain(it);
   });
+  mThumbs.appendChild(t);
+  if(idx===0) t.classList.add('active');
+});
+
   renderMain(items[0]||{type:'none'});
   
   // Crear botones "Editar" y "Eliminar" si no existen
