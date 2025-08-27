@@ -25,31 +25,5 @@
       "wilson",
       "mercedez"
     ]
-  },
-  {
-    "id": 1756301893766,
-    "coords": [
-      4.702458720068025,
-      -74.11004662513734
-    ],
-    "title": "Casita - Adri - Santi",
-    "media": {
-      "images": [
-        "https://res.cloudinary.com/drssjjayn/image/upload/v1756301939/yvq2decw7drzfhbi283l.jpg"
-      ],
-      "audios": [
-        "https://res.cloudinary.com/drssjjayn/video/upload/v1756301940/smtv8mnhht2fwdcjxmeb.mp3"
-      ],
-      "videos": [
-        "https://res.cloudinary.com/drssjjayn/video/upload/v1756301942/rahesqz3gzwe3lbliaww.mp4"
-      ]
-    },
-    "description": "Casita de Adriana y Santi",
-    "tags": [
-      "casa",
-      "hogar",
-      "nuestra",
-      "casita"
-    ]
   }
 ]
