@@ -1,3 +1,26 @@
 [
-  
+  {
+    "id": 1756311264864,
+    "coords": [
+      4.790182443241759,
+      -74.33763742446901
+    ],
+    "title": "Casa Yulieth",
+    "media": {
+      "images": [
+        "https://res.cloudinary.com/drssjjayn/image/upload/v1756311345/vem3radlygvlehdxysfy.png"
+      ],
+      "audios": [],
+      "videos": [
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756311347/qu2sbvahad3sriy7ders.mp4"
+      ]
+    },
+    "description": "Casa yulieth",
+    "tags": [
+      "casa",
+      "yulieth",
+      "prado",
+      "faca"
+    ]
+  }
 ]
