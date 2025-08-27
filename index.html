@@ -251,48 +251,63 @@ function openModal(p){
 map.on('click', e=>{ lastClick = e.latlng; openModal(null); });
 
 // --- Subida directa a Cloudinary ---
-async function uploadFileDirect(file,type){
+async function uploadFileDirect(file, type){
   if(!file) return null;
-  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${type==='video'?'raw':'auto'}/upload`;
+
+  // Detectar resource_type correcto
+  let resourceType = "auto";
+  if(type === "image") resourceType = "image";
+  else if(type === "video") resourceType = "video";
+  else if(type === "audio") resourceType = "video"; // Cloudinary maneja audio como "video"
+  else resourceType = "raw";
+
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
+
   const form = new FormData();
-  form.append('file', file);
-  form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-  const res = await fetch(url,{ method:'POST', body: form });
+  form.append("file", file);
+  form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+  const res = await fetch(url, { method: "POST", body: form });
   const json = await res.json();
-  if(!json.secure_url) throw new Error('Cloudinary upload failed');
+
+  if(!json.secure_url) throw new Error("Cloudinary upload failed");
   return json.secure_url;
 }
 
 // --- Guardar lugar ---
-mSave.addEventListener('click', async ()=>{
-  const title = mTitle.textContent.trim() || 'Inserta nombre';
-  currentPlace.title = title;
+mSave.addEventListener("click", async () => {
+  const title = mTitle.textContent.trim() || "Inserta nombre";
   const desc = mDesc.value;
-  const tags = mTagsInput.value.split(',').map(t=>t.trim()).filter(Boolean);
+  const tags = mTagsInput.value.split(",").map(t=>t.trim()).filter(Boolean);
+
+  // Subida de medios
   const media = { images:[], audios:[], videos:[] };
+  for(const f of mImages.files) media.images.push(await uploadFileDirect(f, "image"));
+  for(const f of mAudio.files) media.audios.push(await uploadFileDirect(f, "audio"));
+  for(const f of mVideo.files) media.videos.push(await uploadFileDirect(f, "video"));
 
-  for(const f of mImages.files) media.images.push(await uploadFileDirect(f,'image'));
-  for(const f of mAudio.files) media.audios.push(await uploadFileDirect(f,'audio'));
-  for(const f of mVideo.files) media.videos.push(await uploadFileDirect(f,'video'));
-
+  // Actualizar datos del lugar
   currentPlace.title = title;
   currentPlace.description = desc;
   currentPlace.tags = tags;
   currentPlace.media = media;
-  currentPlace.coords = [lastClick.lat,lastClick.lng];
-  if(!places.includes(currentPlace)) places.push(currentPlace);
+  currentPlace.coords = [lastClick.lat, lastClick.lng];
 
-  addPlace(currentPlace);
+  if(!places.find(p => p.id === currentPlace.id)) {
+    places.push(currentPlace);
+    addPlace(currentPlace);
+  }
+
   updateCount();
 
-  // Guardar en CMS si deseas
-  await fetch('/.netlify/functions/cms-save',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(currentPlace)
+  // Persistir en Netlify CMS (cms-save actualiza lugares.json en el repo)
+  await fetch("/.netlify/functions/cms-save", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(currentPlace)
   });
 
-  modal.classList.remove('open');
+  modal.classList.remove("open");
 });
 
 // --- Búsqueda ---

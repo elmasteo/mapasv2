@@ -1,14 +1,12 @@
 // /.netlify/functions/cms-save.js
 const fetch = require("node-fetch");
-const Busboy = require("busboy");
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO;
-const GITHUB_BRANCH = process.env.GITHUB_BRANCH;
+const GITHUB_REPO = process.env.GITHUB_REPO;     // ej: "usuario/repo"
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH; // ej: "main"
 const DATA_FILE = "lugares.json";
-const MEDIA_DIR = "media";
 
-// helper para obtener SHA si el archivo ya existe
+// helper: obtener SHA si el archivo ya existe
 async function getFileSha(filePath) {
   const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`;
   const res = await fetch(apiUrl, {
@@ -21,7 +19,7 @@ async function getFileSha(filePath) {
   return null; // no existe
 }
 
-// helper para subir archivo a GitHub
+// helper: subir archivo a GitHub
 async function commitToGitHub(filePath, base64Content, message) {
   const sha = await getFileSha(filePath);
   const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`;
@@ -45,87 +43,46 @@ async function commitToGitHub(filePath, base64Content, message) {
   return resp.json();
 }
 
-// parse multipart/form-data si envían archivos
-async function parseMultipart(event) {
-  return new Promise((resolve, reject) => {
-    const headers = {};
-    Object.entries(event.headers || {}).forEach(([k,v]) => headers[k.toLowerCase()] = v);
-
-    const busboy = Busboy({ headers });
-    const result = { fields: {}, files: [] };
-
-    busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
-      let buffer = [];
-      file.on("data", (data) => buffer.push(data));
-      file.on("end", () => {
-        result.files.push({
-          name: filename,
-          type: mimetype,
-          data: Buffer.concat(buffer).toString("base64")
-        });
-      });
-    });
-
-    busboy.on("field", (fieldname, val) => {
-      result.fields[fieldname] = val;
-    });
-
-    busboy.on("finish", () => resolve(result));
-    busboy.on("error", reject);
-
-    busboy.end(Buffer.from(event.body, "base64"));
-  });
-}
-
 exports.handler = async (event) => {
   try {
-    if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
-
-    let body;
-    let files = [];
-
-    const contentType = event.headers["content-type"] || event.headers["Content-Type"];
-    if (contentType?.includes("multipart/form-data")) {
-      const parsed = await parseMultipart(event);
-      body = parsed.fields.payload ? JSON.parse(parsed.fields.payload) : parsed.fields;
-      files = parsed.files;
-    } else {
-      body = JSON.parse(event.body);
-      files = body.files || [];
+    if (event.httpMethod !== "POST") {
+      return { statusCode: 405, body: "Method Not Allowed" };
     }
 
-    // Traer JSON actual
+    const body = JSON.parse(event.body);
+
+    // traer JSON actual
     let places = [];
     try {
-      const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${DATA_FILE}`);
-      if (res.ok) places = await res.json();
-    } catch {}
-
-    body.media = { images: [], audios: [], videos: [] };
-
-    for (const file of files) {
-      const filePath = `${MEDIA_DIR}/${file.name}`;
-      const safeBase64 = Buffer.from(file.data, "base64").toString("base64");
-      await commitToGitHub(filePath, safeBase64, `Add media ${file.name}`);
-
-      if (file.type.startsWith("image/")) body.media.images.push(`/${filePath}`);
-      if (file.type.startsWith("audio/")) body.media.audios.push(`/${filePath}`);
-      if (file.type.startsWith("video/")) body.media.videos.push(`/${filePath}`);
+      const res = await fetch(
+        `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${DATA_FILE}`
+      );
+      if (res.ok) {
+        places = await res.json();
+      }
+    } catch (err) {
+      console.log("lugares.json aún no existe, se creará nuevo.");
     }
 
-    places.push(body);
+    // si viene deleteId → eliminar
+    if (body.deleteId) {
+      places = places.filter(p => p.id !== body.deleteId);
+      const jsonBase64 = Buffer.from(JSON.stringify(places, null, 2)).toString("base64");
+      await commitToGitHub(DATA_FILE, jsonBase64, `Delete place ${body.deleteId}`);
+      return { statusCode: 200, body: JSON.stringify({ ok: true, deleted: body.deleteId }) };
+    }
 
-    // Guardar places.json actualizado
-    const jsonBase64 = Buffer.from(JSON.stringify(places, null, 2)).toString("base64");
-    await commitToGitHub(DATA_FILE, jsonBase64, `Add place ${body.id || "new"}`);
+    // insertar o reemplazar por id
+    const idx = places.findIndex(p => p.id === body.id);
+    if (idx >= 0) {
+      places[idx] = body; // update
+    } else {
+      places.push(body); // add
+    }
 
-    if(body.deleteId){
-    places = places.filter(p=>p.id !== body.deleteId);
-    // Guardar places.json actualizado
+    // guardar lugares.json actualizado
     const jsonBase64 = Buffer.from(JSON.stringify(places, null, 2)).toString("base64");
-    await commitToGitHub(DATA_FILE, jsonBase64, `Delete place ${body.deleteId}`);
-    return { statusCode:200, body: JSON.stringify({ok:true, deleted: body.deleteId}) };
-  }
+    await commitToGitHub(DATA_FILE, jsonBase64, `Save place ${body.id || "new"}`);
 
     return { statusCode: 200, body: JSON.stringify({ ok: true, place: body }) };
   } catch (err) {
