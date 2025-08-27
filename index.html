@@ -329,16 +329,16 @@ mSave.addEventListener("click", async () => {
   currentPlace.description = desc;
   currentPlace.tags = tags;
   currentPlace.media = media;
-  currentPlace.coords = [lastClick.lat, lastClick.lng];
 
-  if(!places.find(p => p.id === currentPlace.id)) {
+  // Solo asignar coords si es un lugar nuevo
+  if (!places.find(p => p.id === currentPlace.id)) {
+    currentPlace.coords = [lastClick.lat, lastClick.lng];
     places.push(currentPlace);
     addPlace(currentPlace);
   }
 
   updateCount();
 
-  // Persistir en Netlify CMS (cms-save actualiza lugares.json en el repo)
   await fetch("/.netlify/functions/cms-save", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
