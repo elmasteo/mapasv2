@@ -205,23 +205,37 @@ function openModal(p){
     t.title='Imagen'; 
   }
   else if(it.type==='video'){ 
-    // mini video como thumb
-    const v = document.createElement('video');
-    v.src = it.src;
-    v.muted = true;
-    v.playsInline = true;
-    v.style.width = "96px";
-    v.style.height = "58px";
-    v.style.objectFit = "cover";
-    v.title = "Video";
-    v.addEventListener('click', ()=>{
-      [...mThumbs.children].forEach(n=>n.classList.remove('active'));
-      v.classList.add('active'); renderMain(it);
-    });
-    mThumbs.appendChild(v);
-    if(idx===0) v.classList.add('active');
-    return;
-  }
+  const v = document.createElement('video');
+  v.src = it.src;
+  v.muted = true;
+  v.playsInline = true;
+  v.preload = "metadata";
+  v.style.width = "96px";
+  v.style.height = "58px";
+  v.style.objectFit = "cover";
+  v.title = "Video";
+
+  // Mostrar frame en la mitad del video
+  v.addEventListener("loadedmetadata", () => {
+    if (v.duration && isFinite(v.duration)) {
+      v.currentTime = v.duration / 2;
+    }
+  });
+  // Cuando busque el frame, se detiene
+  v.addEventListener("seeked", () => {
+    v.pause();
+  });
+
+  v.addEventListener('click', ()=>{
+    [...mThumbs.children].forEach(n=>n.classList.remove('active'));
+    v.classList.add('active'); 
+    renderMain(it);
+  });
+
+  mThumbs.appendChild(v);
+  if(idx===0) v.classList.add('active');
+  return;
+}
   else if(it.type==='audio'){ 
     // Ícono de audio base64 inline
     t.src = "data:image/svg+xml;base64," + btoa(
