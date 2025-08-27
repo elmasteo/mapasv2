@@ -1,3 +1,29 @@
 [
- 
+  {
+    "id": 1756301513756,
+    "coords": [
+      4.7920886240345295,
+      -74.34146493673326
+    ],
+    "title": "Casa suegros",
+    "media": {
+      "images": [
+        "https://res.cloudinary.com/drssjjayn/image/upload/v1756301564/ekmft3p8n6swnvjfm6qo.jpg"
+      ],
+      "audios": [
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756301565/kgrhm1g8uqxbztj8z2nv.mp3"
+      ],
+      "videos": [
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756301566/qxicdvr5y9etqh8wuxm9.mp4"
+      ]
+    },
+    "description": "Esta es la casa de los suegros",
+    "tags": [
+      "casa",
+      "suegros",
+      "hogar",
+      "wilson",
+      "mercedez"
+    ]
+  }
 ]
