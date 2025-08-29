@@ -1,1 +1,25 @@
-[]
+[
+  {
+    "id": 1756490986328,
+    "coords": [
+      4.699560610482425,
+      -74.14775848388673
+    ],
+    "title": "Prueba lugar",
+    "media": {
+      "images": [
+        "https://res.cloudinary.com/drssjjayn/image/upload/v1756491031/bln9wppa57arryl3btzq.png"
+      ],
+      "audios": [],
+      "videos": [
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756491035/ifmikjwluvni3wd4ghhf.mp4"
+      ]
+    },
+    "description": "Esta es una prueba de lugar",
+    "tags": [
+      "prueba",
+      "lugar",
+      "nuevo"
+    ]
+  }
+]
