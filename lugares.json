@@ -1,1 +1,25 @@
-[]
+[
+  {
+    "id": 1756491712737,
+    "coords": [
+      3.455967661987988,
+      -76.49806022644044
+    ],
+    "title": "Basa aerea",
+    "media": {
+      "images": [
+        "https://res.cloudinary.com/drssjjayn/image/upload/v1756491762/emqlncj5mm6p8qzdvogo.png"
+      ],
+      "audios": [],
+      "videos": [
+        "https://res.cloudinary.com/drssjjayn/video/upload/v1756491766/ad5kyqkttigsooc888wo.mp4"
+      ]
+    },
+    "description": "base aerea",
+    "tags": [
+      "base",
+      "aerea",
+      "aeropuerto"
+    ]
+  }
+]
